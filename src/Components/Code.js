@@ -2,7 +2,7 @@
 import * as React from 'react'
 import { keyframes } from 'emotion'
 import styled from '@emotion/styled'
-import { map, repeat } from 'ramda'
+import { map, repeat, toPairs } from 'ramda'
 import withProps from 'recompose/withProps'
 import { color } from 'styled-system'
 import { Text } from './Text'
@@ -36,6 +36,18 @@ export const Span = styled(SpanForChars)(color, ({ theme: { colors } }) => ({
   },
 }))
 
+const Block = ({ children, color, ...props }: { children: React.Node }) => {
+  const childArr = React.Children.toArray(children)
+  return (
+    <span {...props}>
+      {map(
+        child => (typeof child === 'string' ? <Span>{child}</Span> : child),
+        childArr,
+      )}
+    </span>
+  )
+}
+
 const cursorAnimation = keyframes({
   from: { opacity: 1 },
   '33%': { opacity: 1 },
@@ -43,37 +55,74 @@ const cursorAnimation = keyframes({
   to: { opacity: 0 },
 })
 
-const CodeStyle = styled(Text)({
-  fontFamily: 'Hasklig',
-  position: 'relative',
-})
+export const Code = styled(Block)(
+  {
+    display: 'block',
+    fontFamily: 'Hasklig',
+    position: 'relative',
+  },
+  ({ theme: { colors } }) => ({ color: colors.text }),
+)
 
-type CodeProps = { children: React.Node }
-export const Code = ({ children, ...props }: CodeProps) => {
-  console.log(children)
-  return <CodeStyle {...props}>{children}</CodeStyle>
-}
+// type CodeProps = { children: React.Node }
+// export const Code = ({ children, ...props }: CodeProps) => {
+//   return <CodeStyle {...props} />
+// }
 
 export const Var = withProps(() => ({ color: 'variable' }))(Span)
 export const Keyword = withProps(() => ({ color: 'keyword' }))(Span)
 export const Str = withProps(() => ({ color: 'string' }))(Span)
+export const NewLine = () => <br />
 
 const Indent = () => <Span>&nbsp;&nbsp;</Span>
-export const Line = ({
-  children,
-  indent = 0,
-}: {
-  children: React.Node,
+export const Indents = ({ n = 0 }: { n?: number }) => repeat(<Indent />, n)
+
+export const asVar = (value: string) => `var::${value}`
+export const asString = (value: string) => `string:${value}`
+export const asKeyword = (value: string) => `keyword:${value}`
+
+const AS_REGEX = /^[a-z]+::/
+const STRING_REGEX = /^(?:(?:'.*')|(?:`.*`)|(?:".*"))$/
+type ValueProps = {
+  as: React.ComponentType<any>,
   indent?: number,
-}) => {
-  const childArr = React.Children.toArray(children)
+  children: any,
+}
+export const Value = ({ as, children, indent = 0 }: ValueProps) => {
+  if (as) return <as>{children}</as>
+
+  if (typeof children === 'string' && AS_REGEX.test(children)) {
+    const [type, value] = children.split('::')
+    if (type === 'var') return <Var>{value}</Var>
+    if (type === 'string') return <Str>{value}</Str>
+    if (type === 'keyword') return <Keyword>{value}</Keyword>
+  }
+  if (typeof children === 'string') return <Str>{"'" + children + "'"}</Str>
+  if (typeof children === 'object')
+    return <ObjLiteral indent={indent}>{children}</ObjLiteral>
+  return <Var>{children}</Var>
+}
+type ObjLiteralProps = {
+  children: Object,
+  indent?: number,
+}
+export const ObjLiteral = ({ children, indent = 0 }: ObjLiteralProps) => {
+  const pairs = toPairs(children)
   return (
-    <Box height={26}>
-      {map(() => <Indent />, repeat(null, indent))}
+    <Block>
+      {'{'} <NewLine />
       {map(
-        child => (typeof child === 'string' ? <Span>{child}</Span> : child),
-        childArr,
+        ([key, val]) => (
+          <Block>
+            <Indents n={indent + 1} />
+            {key}: <Value indent={indent + 1}>{val}</Value>,
+            <NewLine />
+          </Block>
+        ),
+        pairs,
       )}
-    </Box>
+      <Indents n={indent} />
+      {'}'}
+    </Block>
   )
 }

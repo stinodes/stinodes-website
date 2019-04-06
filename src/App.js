@@ -8,6 +8,11 @@ import {
   Keyword as K,
   Str as S,
   Var as V,
+  NewLine as N,
+  Indents as I,
+  ObjLiteral,
+  asVar,
+  asString,
 } from './Components'
 
 const theme = {
@@ -26,19 +31,29 @@ class App extends React.Component {
       <ThemeProvider theme={theme}>
         <Flex bg="panel" minHeight="100vh" p={3}>
           <Code>
-            <Line>
-              <K>function</K> <V>test</V>() {'{'}
-            </Line>
-            <Line indent={1}>
-              <K>const</K> <V>nickname</V> = <S>'stinodes'</S>
-            </Line>
-            <Line indent={1}>
-              <K>const</K> <V>firstName</V> = <S>'Stijn'</S>
-            </Line>
-            <Line indent={1}>
-              <K>const</K> <V>lastName</V> = <S>'Tytgat'</S>
-            </Line>
+            <K>function</K> <V>showProfile</V>() {'{'} <N />
+            <I n={1} /> <K>const</K> <V>myProfile</V> = {'{'} <N />
+            <I n={2} />
+            nickname: <S>'stinodes'</S>,
+            <N />
+            <I n={2} />
+            firstName: <S>'Stijn'</S>,
+            <N />
+            <I n={2} />
+            lastName: <S>'Tytgat'</S>,
+            <N />
+            <I n={1} />
             {'}'}
+            <N />
+            {'}'}
+            <N />
+            <ObjLiteral>
+              {{
+                firstName: 'Stijn',
+                lastName: 'Tytgat',
+                test: { key: asVar('myVar') },
+              }}
+            </ObjLiteral>
           </Code>
         </Flex>
       </ThemeProvider>

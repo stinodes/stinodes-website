@@ -50,7 +50,6 @@ const PositionableDrawableCol = ({
 
 export const Intro = () => {
   const navDimensions = useDimensionsFor('navigation')
-  console.log(navDimensions)
   const titleDimensions = useDimensionsFor('title')
   const { step, isPastStep } = useStepsContext()
   const [fadeSpring, setFade] = useSpring(() => ({

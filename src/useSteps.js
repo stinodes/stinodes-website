@@ -15,16 +15,16 @@ import {
 
 const steps = [
   { name: 'none', dur: 200 },
-  { name: 'command', add: 'create-awesome-app stinodes', dur: 200 },
-  { name: 'initializing', add: 'initializing...', dur: 1000 },
-  { name: 'initialized', update: 'initialized ✅', dur: 500 },
+  { name: 'command', add: 'create-awesome-app stinodes', dur: 300 },
+  { name: 'initializing', add: 'initializing...', dur: 300 },
+  { name: 'initialized', update: 'initialized ✅', dur: 300 },
   { name: 'generating.0', add: 'generating layout...', dur: 1500 },
   { name: 'generating.1', dur: 1000 },
   { name: 'generating.2', dur: 1000 },
-  { name: 'generated', update: 'generated ✅', dur: 500 },
+  { name: 'generated', update: 'generated ✅', dur: 300 },
   { name: 'drawing', add: 'drawing app...', dur: 3000 },
   { name: 'done', update: 'done ✅', dur: 700 },
-  { name: 'hide' },
+  //  { name: 'hide' },
 ]
 
 type CtxType = {

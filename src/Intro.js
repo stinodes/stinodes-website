@@ -28,6 +28,13 @@ const BorderCol = styled(Flex)(
       borders,
     ),
 )
+const Background = styled(Fixed)(
+  { top: 0, left: 0, right: 0, bottom: 0, border: 'transparent 1px solid' },
+  ({ theme: { colors } }) => ({
+    background: colors.darks[1],
+    borderTopColor: colors.darks[3],
+  }),
+)
 const PositionableDrawableCol = ({
   dimensions: { x, y, width, height },
   ...props
@@ -43,18 +50,36 @@ const PositionableDrawableCol = ({
 
 export const Intro = () => {
   const navDimensions = useDimensionsFor('navigation')
+  console.log(navDimensions)
   const titleDimensions = useDimensionsFor('title')
   const { step, isPastStep } = useStepsContext()
-  const [spring, set] = useSpring(() => ({ opacity: 1 }))
+  const [fadeSpring, setFade] = useSpring(() => ({
+    opacity: 1,
+  }))
+  const [backgroundSpring, setBackground] = useSpring(() => ({
+    transform: `translateY(0%)`,
+    config: { tension: 33 },
+  }))
   React.useEffect(() => {
-    if (step === 'done') {
-      set({ opacity: 0 })
-    }
+    if (step === 'drawing')
+      setBackground({
+        transform: `translateY(100%)`,
+      })
+    if (step === 'done') setFade({ opacity: 0 })
   }, [step])
 
   return (
-    <Flex as={animated.div} style={spring} flex={1} bg="darks.1">
-      <Flex width={1}>
+    <animated.div style={fadeSpring}>
+      <Background
+        as={animated.div}
+        top={0}
+        left={0}
+        right={0}
+        bottom={0}
+        bg="darks.1"
+        style={backgroundSpring}
+      />
+      <Fixed as={Flex} top={0} left={0} right={0} bottom={0}>
         <DrawableCols visible={isPastStep('generating.0')} as={BorderCol}>
           <BorderCol width={1 / cols} />
           <BorderCol width={1 / cols} />
@@ -63,7 +88,7 @@ export const Intro = () => {
           <BorderCol width={1 / cols} />
           <BorderCol width={1 / cols} />
         </DrawableCols>
-      </Flex>
+      </Fixed>
       <PositionableDrawableCol
         dimensions={navDimensions}
         visible={isPastStep('generating.1')}
@@ -94,6 +119,6 @@ export const Intro = () => {
       </PositionableDrawableCol>
 
       <IntroConsole />
-    </Flex>
+    </animated.div>
   )
 }

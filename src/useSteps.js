@@ -24,7 +24,7 @@ const steps = [
   { name: 'generated', update: 'generated ✅', dur: 300 },
   { name: 'drawing', add: 'drawing app...', dur: 3000 },
   { name: 'done', update: 'done ✅', dur: 700 },
-    { name: 'hide' },
+  { name: 'hide' },
 ]
 
 type CtxType = {

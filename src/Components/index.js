@@ -1,5 +1,6 @@
 // @flow
 export * from './Text'
+export * from './Card'
 export * from './Container'
 export * from './Button'
 export * from './Outline'

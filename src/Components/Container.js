@@ -1,28 +1,16 @@
 // @flow
-import * as React from 'react'
 import styled from '@emotion/styled'
 import withProps from 'recompose/withProps'
-import { transparentize } from 'polished'
-import { color, opacity } from 'styled-system'
+import { color } from 'styled-system'
 import { layout, position, flexBox } from './styles'
 
 export const Box = styled('div')(layout, position, color)
-export const Flex = styled(Box)({ display: 'flex' }, flexBox)
+export const Flex = styled(Box)({ flexShrink: 0 }, flexBox)
 
 export const Absolute = withProps({ position: 'absolute' })(Box)
+export const Fixed = withProps({ position: 'fixed' })(Box)
 
-export const MaxWidthContainer = (props: {}) => (
-  <Flex
-    px={{ sm: 6, md: 140 }}
-    maxWidth={1640}
-    mx="auto"
-    width={1}
-    flexDirection="column"
-    {...props}
-  />
-)
-
-export const Grid = withProps(({ gutter, ...props }) => {
+export const Grid = withProps(({ innerRef, maxWidth, gutter, ...props }) => {
   let invertedGutter
   if (Array.isArray(gutter)) gutter.map(v => -v)
   else if (typeof gutter === 'object')
@@ -35,46 +23,29 @@ export const Grid = withProps(({ gutter, ...props }) => {
     )
   else invertedGutter = -gutter
 
-  return { ...props, mx: invertedGutter || -6 }
-})(Box)
-export const Col = withProps(({ gutter, ...props }) => ({
+  return {
+    ...props,
+    ref: innerRef,
+    mx: invertedGutter || {
+      sm: -1,
+      md: -12,
+      xlg: -2,
+    },
+    maxWidth: maxWidth || {
+      lg: 945,
+      xlg: 1120,
+    },
+    flexWrap: 'wrap',
+  }
+})(Flex)
+
+export const Col = withProps(({ innerRef, gutter, ...props }) => ({
+  width: 1,
   ...props,
-  px: gutter || 6,
-}))(styled(Box)({ display: 'inline-block' }))
-
-export const ScrollView = styled(Box)(
-  ({ horizontal }) => {
-    if (horizontal) return { overflowX: 'auto', overflowY: 'hidden' }
-    return { overflowY: 'auto', overflowX: 'hidden' }
+  ref: innerRef,
+  px: gutter || {
+    sm: 1,
+    md: 12,
+    xlg: 2,
   },
-  ({ theme }) => ({
-    '&::-webkit-scrollbar': {
-      backgroundColor: 'transparent',
-      width: 8,
-    },
-    '&::-webkit-scrollbar-thumb': {
-      backgroundColor: theme.colors.charlestonGreen,
-      borderRadius: 4,
-    },
-  }),
-)
-
-export const Opacity = styled(Box)(
-  { transition: 'opacity .2s ease' },
-  opacity,
-  ({ hover }) => ({ ':hover': { opacity: hover } }),
-)
-
-export const Card = styled(Flex)(({ theme, borderRadius, border, shadow }) => ({
-  border:
-    border &&
-    `${transparentize(0.95)(
-      typeof border === 'string' ? border : theme.colors.blackCoral,
-    )} 1px solid`,
-  boxShadow:
-    shadow &&
-    `${transparentize(0.9)(theme.colors.blackCoral)} 0 ${
-      position === 'bottom' ? -8 : 8
-    }px 24px`,
-  borderRadius,
-}))
+}))(Flex)

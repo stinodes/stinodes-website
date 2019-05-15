@@ -1,12 +1,13 @@
 // @flow
+// @jsx jsx
+import { jsx } from '@emotion/core'
 import * as React from 'react'
 import { keyframes } from 'emotion'
 import styled from '@emotion/styled'
-import { map, repeat, toPairs } from 'ramda'
-import withProps from 'recompose/withProps'
+import { map, repeat } from 'ramda'
+import { useTransition, animated } from 'react-spring'
 import { color } from 'styled-system'
-import { Text } from './Text'
-import { Box } from './Container'
+import { typography } from './styles'
 
 const SpanForChars = ({
   value,
@@ -16,6 +17,13 @@ const SpanForChars = ({
   value: string,
   children: string,
 }) => map(c => <span {...props}>{c}</span>, value || children)
+
+const cursorAnimation = keyframes({
+  from: { opacity: 1 },
+  '33%': { opacity: 1 },
+  '66%': { opacity: 0 },
+  to: { opacity: 0 },
+})
 
 export const Span = styled(SpanForChars)(color, ({ theme: { colors } }) => ({
   position: 'relative',
@@ -31,98 +39,83 @@ export const Span = styled(SpanForChars)(color, ({ theme: { colors } }) => ({
       width: '100%',
       height: '100%',
       animation: `${cursorAnimation} infinite 1s`,
-      backgroundColor: colors.text,
+      backgroundColor: colors.text[1],
     },
   },
 }))
+export const AnimatedSpan = animated(Span)
 
-const Block = ({ children, color, ...props }: { children: React.Node }) => {
+const Block = ({
+  children,
+  color,
+  ...props
+}: {
+  children: React.Node,
+  color: string,
+}) => {
   const childArr = React.Children.toArray(children)
   return (
     <span {...props}>
       {map(
-        child => (typeof child === 'string' ? <Span>{child}</Span> : child),
+        child =>
+          typeof child === 'string' ? (
+            <Span color={color}>{child}</Span>
+          ) : (
+            child
+          ),
         childArr,
       )}
     </span>
   )
 }
 
-const cursorAnimation = keyframes({
-  from: { opacity: 1 },
-  '33%': { opacity: 1 },
-  '66%': { opacity: 0 },
-  to: { opacity: 0 },
-})
-
 export const Code = styled(Block)(
   {
-    display: 'block',
-    fontFamily: 'Hasklig',
+    fontFamily: 'Source Code Pro',
     position: 'relative',
   },
-  ({ theme: { colors } }) => ({ color: colors.text }),
+  typography,
 )
 
-// type CodeProps = { children: React.Node }
-// export const Code = ({ children, ...props }: CodeProps) => {
-//   return <CodeStyle {...props} />
-// }
+export const Ellipsis = () => {
+  const [mode, setMode] = React.useState('add')
+  const [num, setNum] = React.useState(0)
+  const timeout = React.useRef(null)
 
-export const Var = withProps(() => ({ color: 'variable' }))(Span)
-export const Keyword = withProps(() => ({ color: 'keyword' }))(Span)
-export const Str = withProps(() => ({ color: 'string' }))(Span)
-export const NewLine = () => <br />
+  const transitions = useTransition(repeat('.', num), (item, index) => index, {
+    from: { opacity: 0, transform: 'translateY(5px)' },
+    enter: { opacity: 1, transform: 'translateY(0px)' },
+    leave: { opacity: 0, transform: 'translateY(5px)' },
+  })
 
-const Indent = () => <Span>&nbsp;&nbsp;</Span>
-export const Indents = ({ n = 0 }: { n?: number }) => repeat(<Indent />, n)
+  React.useEffect(() => {
+    if (mode === 'add') {
+      timeout.current = setTimeout(() => {
+        if (num === 3) return setMode('remove')
+        return setNum(num => (num === 3 ? num : num + 1))
+      }, 500)
+    } else {
+      timeout.current = setTimeout(() => {
+        if (num === 0) return setMode('add')
+        return setNum(num => (num === 0 ? num : num - 1))
+      }, 100)
+    }
+    return () => clearTimeout(timeout.current)
+  }, [num, mode])
 
-export const asVar = (value: string) => `var::${value}`
-export const asString = (value: string) => `string:${value}`
-export const asKeyword = (value: string) => `keyword:${value}`
-
-const AS_REGEX = /^[a-z]+::/
-const STRING_REGEX = /^(?:(?:'.*')|(?:`.*`)|(?:".*"))$/
-type ValueProps = {
-  as: React.ComponentType<any>,
-  indent?: number,
-  children: any,
-}
-export const Value = ({ as, children, indent = 0 }: ValueProps) => {
-  if (as) return <as>{children}</as>
-
-  if (typeof children === 'string' && AS_REGEX.test(children)) {
-    const [type, value] = children.split('::')
-    if (type === 'var') return <Var>{value}</Var>
-    if (type === 'string') return <Str>{value}</Str>
-    if (type === 'keyword') return <Keyword>{value}</Keyword>
-  }
-  if (typeof children === 'string') return <Str>{"'" + children + "'"}</Str>
-  if (typeof children === 'object')
-    return <ObjLiteral indent={indent}>{children}</ObjLiteral>
-  return <Var>{children}</Var>
-}
-type ObjLiteralProps = {
-  children: Object,
-  indent?: number,
-}
-export const ObjLiteral = ({ children, indent = 0 }: ObjLiteralProps) => {
-  const pairs = toPairs(children)
   return (
-    <Block>
-      {'{'} <NewLine />
-      {map(
-        ([key, val]) => (
-          <Block>
-            <Indents n={indent + 1} />
-            {key}: <Value indent={indent + 1}>{val}</Value>,
-            <NewLine />
-          </Block>
-        ),
-        pairs,
+    <span css={{ position: 'relative' }}>
+      {transitions.map(
+        ({ item, key, props }) =>
+          item && (
+            <animated.span
+              css={{ display: 'inline-block' }}
+              key={key}
+              style={props}>
+              <Span color="lights.3">.</Span>
+            </animated.span>
+          ),
       )}
-      <Indents n={indent} />
-      {'}'}
-    </Block>
+    </span>
   )
 }
